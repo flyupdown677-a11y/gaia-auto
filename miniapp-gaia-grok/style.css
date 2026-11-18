@@ -23,24 +23,31 @@
   -webkit-tap-highlight-color: transparent;
 }
 
+html, body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
 body.grok-dark {
   background-color: var(--bg-black);
   color: var(--text-primary);
   font-family: var(--font-sans);
-  height: 100vh;
-  overflow: hidden;
   user-select: none;
 }
 
 .grok-layout {
   display: flex;
   flex-direction: column;
-  height: 100vh;
+  width: 100%;
+  height: 100%;
+  max-width: 100%;
+  max-height: 100%;
 }
 
 /* Topbar */
 .grok-topbar {
-  height: 52px;
+  height: 50px;
   background-color: var(--bg-surface);
   border-bottom: 1px solid var(--border-subtle);
   display: flex;
@@ -48,23 +55,27 @@ body.grok-dark {
   justify-content: space-between;
   padding: 0 16px;
   flex-shrink: 0;
+  z-index: 20;
 }
 
 .topbar-left {
   display: flex;
   align-items: center;
   gap: 12px;
+  min-width: 0;
 }
 
 .xai-logo {
   color: var(--text-primary);
   display: flex;
   align-items: center;
+  flex-shrink: 0;
 }
 
 .bot-identity {
   display: flex;
   flex-direction: column;
+  min-width: 0;
 }
 
 .bot-title-line {
@@ -77,6 +88,9 @@ body.grok-dark {
   font-size: 13px;
   font-weight: 700;
   letter-spacing: -0.2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .active-badge {
@@ -88,30 +102,36 @@ body.grok-dark {
   padding: 1px 4px;
   border-radius: 3px;
   font-family: var(--font-mono);
+  flex-shrink: 0;
 }
 
 .bot-role {
   font-size: 10px;
   color: var(--text-muted);
   font-family: var(--font-mono);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .topbar-right {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
+  flex-shrink: 0;
 }
 
 .connection-status {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   background: var(--bg-card);
   border: 1px solid var(--border-subtle);
-  padding: 5px 10px;
+  padding: 4px 10px;
   border-radius: 20px;
   font-size: 11px;
   font-family: var(--font-mono);
+  white-space: nowrap;
 }
 
 .pulse-indicator {
@@ -120,6 +140,7 @@ body.grok-dark {
   border-radius: 50%;
   background-color: #f59e0b;
   animation: pulse-ring 1.5s infinite ease-in-out;
+  flex-shrink: 0;
 }
 
 .pulse-indicator.connected {
@@ -141,11 +162,12 @@ body.grok-dark {
   background: var(--bg-card);
   color: var(--text-primary);
   border: 1px solid var(--border-subtle);
-  padding: 6px 12px;
+  padding: 5px 12px;
   border-radius: 20px;
   font-size: 11px;
   font-weight: 600;
   cursor: pointer;
+  white-space: nowrap;
   transition: all 0.2s;
 }
 
@@ -160,16 +182,19 @@ body.grok-dark {
   border-color: var(--grok-cyan);
 }
 
-/* Workspace Multi-Pane */
+/* Workspace Multi-Pane Container */
 .grok-workspace {
   flex: 1;
   display: flex;
+  flex-direction: row;
   overflow: hidden;
+  width: 100%;
+  height: calc(100% - 50px);
 }
 
-/* Left: Bot Roster */
+/* Left: Bot Roster (Hidden on narrow screens, visible on wide tablets & desktops) */
 .bot-roster-pane {
-  width: 220px;
+  width: 200px;
   background-color: var(--bg-surface);
   border-right: 1px solid var(--border-subtle);
   display: flex;
@@ -177,14 +202,14 @@ body.grok-dark {
   flex-shrink: 0;
 }
 
-@media (max-width: 800px) {
+@media (max-width: 900px) {
   .bot-roster-pane {
     display: none;
   }
 }
 
 .roster-header {
-  padding: 12px 16px;
+  padding: 10px 14px;
   font-size: 10px;
   font-weight: 700;
   color: var(--text-muted);
@@ -211,6 +236,7 @@ body.grok-dark {
   flex-direction: column;
   gap: 4px;
   flex: 1;
+  overflow-y: auto;
 }
 
 .roster-item {
@@ -233,15 +259,16 @@ body.grok-dark {
 }
 
 .bot-avatar {
-  width: 32px;
-  height: 32px;
+  width: 30px;
+  height: 30px;
   border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 16px;
+  font-size: 15px;
   background: #181d26;
   border: 1px solid var(--border-subtle);
+  flex-shrink: 0;
 }
 
 .bot-meta {
@@ -251,7 +278,7 @@ body.grok-dark {
 }
 
 .bot-meta .name {
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 600;
   color: var(--text-primary);
   white-space: nowrap;
@@ -260,7 +287,7 @@ body.grok-dark {
 }
 
 .bot-meta .status-msg {
-  font-size: 10px;
+  font-size: 9px;
   color: var(--text-muted);
   white-space: nowrap;
   overflow: hidden;
@@ -268,7 +295,7 @@ body.grok-dark {
 }
 
 .roster-section-title {
-  padding: 8px 16px;
+  padding: 6px 14px;
   font-size: 9px;
   font-weight: 700;
   letter-spacing: 0.5px;
@@ -278,16 +305,16 @@ body.grok-dark {
 }
 
 .roster-footer {
-  padding: 12px;
+  padding: 10px 14px;
   background: var(--bg-black);
 }
 
 .system-stats {
   display: flex;
   flex-direction: column;
-  gap: 5px;
+  gap: 4px;
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: 9px;
   color: var(--text-muted);
 }
 
@@ -304,35 +331,42 @@ body.grok-dark {
   color: var(--accent-green);
 }
 
-/* Center: Chat & Actions Feed */
+/* Center: Chat & Neural Log Feed */
 .grok-chat-pane {
-  flex: 1.1;
+  flex: 1;
+  min-width: 0;
   background-color: var(--bg-black);
   display: flex;
   flex-direction: column;
   border-right: 1px solid var(--border-subtle);
   overflow: hidden;
+  height: 100%;
 }
 
 .chat-header {
-  height: 44px;
-  padding: 0 16px;
+  height: 42px;
+  padding: 0 14px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   border-bottom: 1px solid var(--border-subtle);
   background: var(--bg-surface);
+  flex-shrink: 0;
 }
 
 .chat-title {
   display: flex;
   align-items: center;
   gap: 8px;
+  min-width: 0;
 }
 
 .agent-title {
   font-size: 12px;
   font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .agent-badge {
@@ -343,15 +377,17 @@ body.grok-dark {
   padding: 2px 6px;
   border-radius: 4px;
   font-weight: 700;
+  flex-shrink: 0;
 }
 
 .mode-selector {
   display: flex;
-  gap: 4px;
+  gap: 3px;
   background: var(--bg-card);
   padding: 2px;
   border-radius: 6px;
   border: 1px solid var(--border-subtle);
+  flex-shrink: 0;
 }
 
 .mode-chip {
@@ -359,10 +395,11 @@ body.grok-dark {
   border: none;
   color: var(--text-muted);
   font-size: 10px;
-  padding: 3px 8px;
+  padding: 2px 7px;
   border-radius: 4px;
   cursor: pointer;
   font-weight: 600;
+  white-space: nowrap;
 }
 
 .mode-chip.active {
@@ -372,11 +409,12 @@ body.grok-dark {
 
 .chat-feed {
   flex: 1;
-  padding: 16px;
+  padding: 14px;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
+  min-height: 0;
 }
 
 .message-block {
@@ -384,13 +422,13 @@ body.grok-dark {
   flex-direction: column;
   gap: 4px;
   max-width: 95%;
-  line-height: 1.5;
+  line-height: 1.45;
 }
 
 .message-block.system {
   background: var(--bg-surface);
   border: 1px solid var(--border-subtle);
-  padding: 10px 12px;
+  padding: 8px 10px;
   border-radius: 8px;
   font-family: var(--font-mono);
   font-size: 11px;
@@ -437,7 +475,7 @@ body.grok-dark {
   background: #0d1219;
   border: 1px solid #1f2c3f;
   border-left: 3px solid var(--grok-cyan);
-  padding: 8px 12px;
+  padding: 6px 10px;
   border-radius: 4px;
   font-family: var(--font-mono);
   font-size: 11px;
@@ -453,17 +491,18 @@ body.grok-dark {
 .quick-chips-bar {
   display: flex;
   gap: 6px;
-  padding: 8px 12px;
+  padding: 6px 12px;
   background: #0d0f14;
   border-top: 1px solid var(--border-subtle);
   overflow-x: auto;
+  flex-shrink: 0;
 }
 
 .suggestion-chip {
   background: var(--bg-card);
   color: var(--text-secondary);
   border: 1px solid var(--border-subtle);
-  padding: 4px 10px;
+  padding: 4px 9px;
   border-radius: 14px;
   font-size: 11px;
   white-space: nowrap;
@@ -479,9 +518,10 @@ body.grok-dark {
 
 /* Chat Input Bar */
 .chat-input-bar {
-  padding: 10px 12px;
+  padding: 8px 12px;
   border-top: 1px solid var(--border-subtle);
   background: var(--bg-surface);
+  flex-shrink: 0;
 }
 
 .input-wrapper {
@@ -490,7 +530,7 @@ body.grok-dark {
   background: var(--bg-card);
   border: 1px solid var(--border-subtle);
   border-radius: 8px;
-  padding: 6px 10px;
+  padding: 5px 8px;
   transition: border-color 0.2s;
 }
 
@@ -520,30 +560,29 @@ body.grok-dark {
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: opacity 0.15s;
-}
-
-.send-action-btn:hover {
-  opacity: 0.9;
+  flex-shrink: 0;
 }
 
 /* Right: Computer Preview Pane */
 .computer-preview-pane {
-  flex: 1.5;
+  flex: 1.25;
+  min-width: 0;
   background: #000;
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  height: 100%;
 }
 
 .preview-header {
-  height: 44px;
-  padding: 0 16px;
+  height: 42px;
+  padding: 0 14px;
   background: var(--bg-surface);
   border-bottom: 1px solid var(--border-subtle);
   display: flex;
   align-items: center;
   justify-content: space-between;
+  flex-shrink: 0;
 }
 
 .preview-title {
@@ -553,6 +592,7 @@ body.grok-dark {
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.5px;
+  white-space: nowrap;
 }
 
 .live-dot {
@@ -561,6 +601,7 @@ body.grok-dark {
   border-radius: 50%;
   background: var(--grok-cyan);
   box-shadow: 0 0 6px var(--grok-cyan);
+  flex-shrink: 0;
 }
 
 .tv-resolution-badge {
@@ -570,11 +611,13 @@ body.grok-dark {
   color: var(--text-secondary);
   padding: 1px 5px;
   border-radius: 3px;
+  flex-shrink: 0;
 }
 
 .preview-controls {
   display: flex;
   gap: 6px;
+  flex-shrink: 0;
 }
 
 .subtle-btn {
@@ -585,6 +628,7 @@ body.grok-dark {
   font-size: 10px;
   border-radius: 4px;
   cursor: pointer;
+  white-space: nowrap;
 }
 
 .subtle-btn:hover {
@@ -595,20 +639,24 @@ body.grok-dark {
 /* TV Viewport */
 .tv-viewport {
   flex: 1;
+  min-height: 0;
   position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
   background: #050608;
   overflow: hidden;
+  padding: 8px;
 }
 
 #tvDisplay {
-  width: 100%;
-  aspect-ratio: 16 / 9;
+  max-width: 100%;
   max-height: 100%;
+  aspect-ratio: 16 / 9;
   object-fit: contain;
   background: #090c13;
+  border-radius: 6px;
+  border: 1px solid #1a2230;
 }
 
 /* Grok AI Mouse Cursor */
@@ -655,7 +703,7 @@ body.grok-dark {
   opacity: 1;
 }
 
-/* Standby Radar */
+/* Standby Radar Screen */
 .standby-screen {
   position: absolute;
   inset: 0;
@@ -665,17 +713,17 @@ body.grok-dark {
   align-items: center;
   justify-content: center;
   text-align: center;
-  padding: 24px;
+  padding: 20px;
   z-index: 5;
 }
 
 .radar-circle {
-  width: 70px;
-  height: 70px;
+  width: 64px;
+  height: 64px;
   border-radius: 50%;
   border: 2px solid rgba(0, 242, 254, 0.2);
   position: relative;
-  margin-bottom: 16px;
+  margin-bottom: 12px;
   overflow: hidden;
 }
 
@@ -696,24 +744,24 @@ body.grok-dark {
 }
 
 .standby-screen h4 {
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 700;
-  margin-bottom: 6px;
+  margin-bottom: 4px;
 }
 
 .standby-screen p {
-  font-size: 11px;
+  font-size: 10px;
   color: var(--text-muted);
-  max-width: 260px;
+  max-width: 250px;
   line-height: 1.4;
-  margin-bottom: 14px;
+  margin-bottom: 12px;
 }
 
 .cyber-outline-btn {
   background: transparent;
   color: var(--grok-cyan);
   border: 1px solid var(--grok-cyan);
-  padding: 6px 14px;
+  padding: 5px 12px;
   border-radius: 6px;
   font-size: 11px;
   font-weight: 700;
@@ -728,24 +776,26 @@ body.grok-dark {
 .tv-remote-strip {
   background: var(--bg-surface);
   border-top: 1px solid var(--border-subtle);
-  padding: 8px 12px;
+  padding: 6px 10px;
   display: flex;
-  gap: 6px;
+  gap: 5px;
   overflow-x: auto;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
 }
 
 .pill-key {
   background: var(--bg-card);
   color: var(--text-secondary);
   border: 1px solid var(--border-subtle);
-  padding: 5px 10px;
+  padding: 4px 8px;
   border-radius: 4px;
-  font-size: 11px;
+  font-size: 10px;
   cursor: pointer;
   white-space: nowrap;
   font-weight: 600;
+  flex-shrink: 0;
 }
 
 .pill-key:active {
@@ -761,4 +811,24 @@ body.grok-dark {
 
 .pill-key.red {
   color: var(--accent-red);
+}
+
+/* Portrait & Narrow Screen Adaptations */
+@media (max-width: 600px) and (orientation: portrait), (max-aspect-ratio: 1/1) {
+  .grok-workspace {
+    flex-direction: column;
+  }
+
+  .computer-preview-pane {
+    order: -1; /* Place TV display on top in vertical layout */
+    height: 40%;
+    flex: none;
+    border-bottom: 1px solid var(--border-subtle);
+  }
+
+  .grok-chat-pane {
+    height: 60%;
+    flex: none;
+    border-right: none;
+  }
 }
