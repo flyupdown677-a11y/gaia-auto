@@ -1,0 +1,15 @@
+{
+  "manifest_version": 1,
+  "id": "com.antigem.grokgaia",
+  "name": "GAIA Grok TV",
+  "version": "1.0.0",
+  "description": "Grok AI TV Controller & Screen Mirror with Auto-Reconnecting CRCP Engine",
+  "entry": "index.html",
+  "icon": "icon.png",
+  "theme_color": "#0d0f12",
+  "permissions": {
+    "network": true,
+    "localhost": true,
+    "notifications": true
+  }
+}
