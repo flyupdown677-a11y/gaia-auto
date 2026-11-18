@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>GAIA Grok TV</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="app">
+    <!-- Header with Grok Cyberpunk branding -->
+    <header class="grok-header">
+      <div class="logo-area">
+        <div class="grok-slash">/</div>
+        <div class="title-wrap">
+          <h1>GROK<span class="highlight">.TV</span></h1>
+          <span class="sub">AUTONOMOUS GAIA CRCP LINK</span>
+        </div>
+      </div>
+      <div class="connection-badge" id="connBadge">
+        <span class="status-dot pulsing"></span>
+        <span id="connStatusText">SEARCHING WI-FI...</span>
+      </div>
+    </header>
+
+    <!-- Main Workspace: Split View -->
+    <main class="workspace">
+      <!-- Left / Top: TV Viewport & Control Surface -->
+      <section class="tv-container">
+        <div class="tv-frame">
+          <div class="tv-bezel">
+            <div class="tv-screen" id="tvScreen">
+              <!-- TV Canvas / Simulated Live Feed -->
+              <canvas id="tvCanvas" width="960" height="540"></canvas>
+              
+              <!-- Touch & Cursor Overlay -->
+              <div id="aiCursor" class="ai-cursor">
+                <div class="cursor-glow"></div>
+                <span class="cursor-label">GROK</span>
+              </div>
+              
+              <!-- Disconnected / Searching Overlay -->
+              <div class="tv-standby-overlay" id="tvStandby">
+                <div class="radar-sweep"></div>
+                <div class="standby-card">
+                  <div class="standby-icon">📺</div>
+                  <h3 id="standbyHeading">Searching Home Wi-Fi</h3>
+                  <p id="standbySub">Auto-scanning local Wi-Fi for your TV. No ports or setup needed. As soon as your TV is detected, it connects automatically.</p>
+                  
+                  <div class="auto-connect-panel">
+                    <div class="radar-loader"></div>
+                    <span id="scanStatusMsg" class="auto-searching-text">Scanning subnet 192.168.0.x...</span>
+                    <button id="btnScanNow" class="cyber-btn">REFRESH SCAN</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div class="tv-controls-bar">
+              <button class="nav-key" data-key="HOME">🏠 HOME</button>
+              <button class="nav-key" data-key="BACK">↩ BACK</button>
+              <button class="nav-key" data-key="UP">▲</button>
+              <button class="nav-key" data-key="DOWN">▼</button>
+              <button class="nav-key" data-key="LEFT">◀</button>
+              <button class="nav-key" data-key="RIGHT">▶</button>
+              <button class="nav-key highlight" data-key="OK">OK</button>
+              <button class="nav-key" data-key="MENU">☰ MENU</button>
+              <button class="nav-key" data-key="VOL_UP">🔊 +</button>
+              <button class="nav-key" data-key="VOL_DOWN">🔉 -</button>
+              <button class="nav-key red" data-key="POWER">⏻ POWER</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Right / Bottom: Grok AI Live Activity & Neural Feed -->
+      <section class="grok-sidebar">
+        <div class="sidebar-header">
+          <div class="ai-mode-tag">
+            <span class="pulse-ring"></span>
+            NEURAL GROK AGENT
+          </div>
+          <button id="btnAiToggle" class="toggle-btn active">AI AUTOPILOT: ON</button>
+        </div>
+
+        <!-- Grok Thinking & Action Stream -->
+        <div class="ai-stream" id="aiStream">
+          <div class="stream-entry sys">
+            <span class="timestamp">[INIT]</span>
+            <span class="msg">Zero-config Wi-Fi discovery active. NSD / mDNS discovery online.</span>
+          </div>
+          <div class="stream-entry ai">
+            <span class="timestamp">[GROK]</span>
+            <span class="msg">Ready! You never need to enter an IP or port. I am continuously sweeping your Wi-Fi network. As soon as your TV powers on or connects, I will automatically lock on and begin mirroring.</span>
+          </div>
+        </div>
+
+        <!-- Grok Prompt & Interactive Command Input -->
+        <div class="grok-input-area">
+          <input type="text" id="grokPrompt" placeholder="Instruct Grok (e.g. 'Open YouTube', 'Clean TV bloatware')...">
+          <button id="btnSendPrompt" class="send-btn">EXECUTE</button>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
