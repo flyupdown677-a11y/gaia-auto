@@ -3,6 +3,7 @@
 
 const appState = {
   connected: false,
+  simulatedMode: false,
   detectedTvIp: null,
   activeBot: 'tv-agent',
   humanTakeover: false,
@@ -10,12 +11,14 @@ const appState = {
   scanTimer: null,
   cursorPos: { x: 480, y: 270 },
   tvApps: [
-    { id: 'yt', name: 'YouTube', icon: '▶️', x: 120, y: 140, w: 140, h: 100 },
-    { id: 'settings', name: 'Settings', icon: '⚙️', x: 290, y: 140, w: 140, h: 100 },
-    { id: 'media', name: 'Media Files', icon: '📁', x: 460, y: 140, w: 140, h: 100 },
-    { id: 'screenshare', name: 'ScreenShare', icon: '📺', x: 630, y: 140, w: 140, h: 100 },
-    { id: 'cleaner', name: 'System Cleaner', icon: '🧹', x: 120, y: 270, w: 140, h: 100 },
-    { id: 'browser', name: 'Web Browser', icon: '🌐', x: 290, y: 270, w: 140, h: 100 }
+    { id: 'yt', name: 'YouTube', icon: '▶️', x: 100, y: 130, w: 140, h: 100 },
+    { id: 'settings', name: 'Settings', icon: '⚙️', x: 260, y: 130, w: 140, h: 100 },
+    { id: 'media', name: 'Media Files', icon: '📁', x: 420, y: 130, w: 140, h: 100 },
+    { id: 'screenshare', name: 'ScreenShare', icon: '📺', x: 580, y: 130, w: 140, h: 100 },
+    { id: 'cleaner', name: 'System Cleaner', icon: '🧹', x: 100, y: 260, w: 140, h: 100 },
+    { id: 'browser', name: 'Web Browser', icon: '🌐', x: 260, y: 260, w: 140, h: 100 },
+    { id: 'deviceinfo', name: 'Device Info', icon: 'ℹ️', x: 420, y: 260, w: 140, h: 100 },
+    { id: 'terminal', name: 'Termux', icon: '💻', x: 580, y: 260, w: 140, h: 100 }
   ]
 };
 
@@ -24,6 +27,7 @@ const canvas = document.getElementById('tvDisplay');
 const ctx = canvas.getContext('2d');
 const tvViewport = document.getElementById('tvViewport');
 const aiCursor = document.getElementById('aiCursor');
+const clickRipple = document.getElementById('clickRipple');
 const standbyScreen = document.getElementById('standbyScreen');
 const connStatus = document.getElementById('connStatus');
 const connLabel = document.getElementById('connLabel');
@@ -33,6 +37,9 @@ const btnSend = document.getElementById('btnSend');
 const btnTakeover = document.getElementById('btnTakeover');
 const takeoverText = document.getElementById('takeoverText');
 const btnRescan = document.getElementById('btnRescan');
+const btnSimulatePower = document.getElementById('btnSimulatePower');
+const btnWakeSim = document.getElementById('btnWakeSim');
+const currentBotTitle = document.getElementById('currentBotTitle');
 
 function init() {
   bindEvents();
@@ -55,13 +62,31 @@ function bindEvents() {
     sweepSubnet();
   });
 
+  btnSimulatePower.addEventListener('click', () => {
+    toggleSimulationLink();
+  });
+
+  btnWakeSim.addEventListener('click', () => {
+    activateSimulationMode();
+  });
+
+  // Suggestion Chips
+  document.querySelectorAll('.suggestion-chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      userInput.value = chip.dataset.prompt;
+      handleUserMessage();
+    });
+  });
+
   // Bot roster item selection
   document.querySelectorAll('.roster-item').forEach(item => {
     item.addEventListener('click', () => {
       document.querySelectorAll('.roster-item').forEach(i => i.classList.remove('active'));
       item.classList.add('active');
       appState.activeBot = item.dataset.bot;
-      appendGrokMessage(`Switched focus to <strong>${item.querySelector('.name').textContent}</strong>. Standing by for instructions.`);
+      const botName = item.querySelector('.name').textContent;
+      currentBotTitle.textContent = `GrokBot / ${botName}`;
+      appendGrokMessage(`Switched active agent to <strong>${botName}</strong>. Specialized subroutines loaded.`);
     });
   });
 
@@ -87,23 +112,41 @@ function bindEvents() {
     const x = Math.round((e.clientX - rect.left) / rect.width * canvas.width);
     const y = Math.round((e.clientY - rect.top) / rect.height * canvas.height);
 
-    injectTouch(x, y);
+    injectTouch(x, y, e.clientX - rect.left, e.clientY - rect.top);
   });
+}
+
+function toggleSimulationLink() {
+  if (appState.connected) {
+    setConnection(false);
+    appState.simulatedMode = false;
+    appendSystemLog('Simulated viewport disconnected. Sweeping Wi-Fi...');
+  } else {
+    activateSimulationMode();
+  }
+}
+
+function activateSimulationMode() {
+  appState.simulatedMode = true;
+  appState.detectedTvIp = '192.168.0.111 (Live Feed)';
+  setConnection(true);
+  appendGrokMessage('Connected to TV display viewport. Computer-use vision pipeline active at 60 FPS.');
 }
 
 // Seamless Background Wi-Fi Discovery
 function startWifiAutoDiscovery() {
   sweepSubnet();
   appState.scanTimer = setInterval(() => {
-    if (!appState.connected) {
+    if (!appState.connected && !appState.simulatedMode) {
       sweepSubnet();
-    } else {
+    } else if (appState.connected && !appState.simulatedMode) {
       verifyLink();
     }
   }, 3500);
 }
 
 async function sweepSubnet() {
+  if (appState.simulatedMode) return;
   appState.reconnectAttempts++;
   connLabel.textContent = `Scanning Wi-Fi (#${appState.reconnectAttempts})...`;
 
@@ -131,13 +174,13 @@ async function sweepSubnet() {
     }
   }
 
-  if (!appState.connected) {
+  if (!appState.connected && !appState.simulatedMode) {
     setConnection(false);
   }
 }
 
 async function verifyLink() {
-  if (!appState.detectedTvIp) return;
+  if (!appState.detectedTvIp || appState.simulatedMode) return;
   try {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 1000);
@@ -176,7 +219,7 @@ function toggleManualTakeover() {
   takeoverText.textContent = appState.humanTakeover ? 'Release to Grok' : 'Manual Takeover';
 
   if (appState.humanTakeover) {
-    appendGrokMessage('Manual takeover engaged. You have direct control over the TV viewport.');
+    appendGrokMessage('Manual takeover engaged. You have direct touch and mouse control over the TV viewport.');
   } else {
     appendGrokMessage('Grok resumed autonomous control.');
   }
@@ -187,9 +230,9 @@ function renderTvScreen(activeApp = null) {
   ctx.fillStyle = '#0a0d14';
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-  // Subtle gradient
+  // Gradient backdrop
   const grad = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
-  grad.addColorStop(0, '#0e1626');
+  grad.addColorStop(0, '#0f172a');
   grad.addColorStop(1, '#05070b');
   ctx.fillStyle = grad;
   ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -225,6 +268,15 @@ function renderTvScreen(activeApp = null) {
   });
 }
 
+// Trigger Click Ripple Effect
+function triggerRipple(screenX, screenY) {
+  clickRipple.style.left = `${screenX}px`;
+  clickRipple.style.top = `${screenY}px`;
+  clickRipple.classList.remove('animate');
+  void clickRipple.offsetWidth; // trigger reflow
+  clickRipple.classList.add('animate');
+}
+
 // Grok Computer-Use: Move Cursor & Click Element
 function moveCursorAndAct(targetX, targetY, actionDesc, callback) {
   aiCursor.style.display = 'flex';
@@ -240,15 +292,17 @@ function moveCursorAndAct(targetX, targetY, actionDesc, callback) {
   setTimeout(() => {
     // Click animation
     aiCursor.style.transform = 'scale(0.85)';
+    triggerRipple(screenX, screenY);
     setTimeout(() => {
       aiCursor.style.transform = 'scale(1)';
       if (callback) callback();
     }, 150);
-  }, 350);
+  }, 400);
 }
 
 // User Touch Handling
-function injectTouch(x, y) {
+function injectTouch(x, y, clientX, clientY) {
+  triggerRipple(clientX, clientY);
   const hit = appState.tvApps.find(a => x >= a.x && x <= a.x + a.w && y >= a.y && y <= a.y + a.h);
   if (hit) {
     renderTvScreen(hit);
@@ -259,6 +313,9 @@ function injectTouch(x, y) {
 function sendKeyCommand(key) {
   appendActionCard('REMOTE COMMAND', `Dispatched RemoteKey.${key} via CRCP socket`);
   if (key === 'HOME') renderTvScreen();
+  else if (key === 'POWER') {
+    toggleSimulationLink();
+  }
 }
 
 // Grok Chat Logic
@@ -288,8 +345,14 @@ function handleUserMessage() {
       renderTvScreen(settings);
       appendGrokMessage('Settings panel opened.');
     });
+  } else if (lower.includes('media') || lower.includes('file')) {
+    const media = appState.tvApps.find(a => a.id === 'media');
+    moveCursorAndAct(media.x + media.w / 2, media.y + media.h / 2, 'Opening Media Browser', () => {
+      renderTvScreen(media);
+      appendGrokMessage('Media Browser opened.');
+    });
   } else {
-    appendGrokMessage(`Received: "<em>${text}</em>". Executing corresponding autonomous action on the TV.`);
+    appendGrokMessage(`Received instruction: "<em>${text}</em>". Translating into CRCP autonomous control sequence.`);
   }
 }
 

@@ -13,13 +13,16 @@
     <header class="grok-topbar">
       <div class="topbar-left">
         <div class="xai-logo">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
             <path d="M4 4l16 16M4 20L20 4"/>
           </svg>
         </div>
         <div class="bot-identity">
-          <span class="bot-name">GrokBot / TV Controller</span>
-          <span class="bot-role">CVTE CRCP Computer-Use Agent</span>
+          <div class="bot-title-line">
+            <span class="bot-name" id="currentBotTitle">GrokBot / TV Controller</span>
+            <span class="active-badge">ACTIVE</span>
+          </div>
+          <span class="bot-role">CVTE CRCP Computer-Use Agent (Zero-Config Wi-Fi)</span>
         </div>
       </div>
 
@@ -46,14 +49,14 @@
       <aside class="bot-roster-pane">
         <div class="roster-header">
           <span>BOT ROSTER</span>
-          <button class="icon-btn-subtle" title="New Agent">+</button>
+          <span class="roster-count">3 ACTIVE</span>
         </div>
 
         <ul class="roster-list">
           <li class="roster-item active" data-bot="tv-agent">
             <div class="bot-avatar tv-avatar">📺</div>
             <div class="bot-meta">
-              <span class="name">TV Automation Bot</span>
+              <span class="name">TV Controller</span>
               <span class="status-msg">Autonomous UI Driving</span>
             </div>
           </li>
@@ -61,7 +64,7 @@
             <div class="bot-avatar clean-avatar">🧹</div>
             <div class="bot-meta">
               <span class="name">System Cleaner</span>
-              <span class="status-msg">Flush caches & ads</span>
+              <span class="status-msg">Flush caches & bloatware</span>
             </div>
           </li>
           <li class="roster-item" data-bot="media-agent">
@@ -73,19 +76,24 @@
           </li>
         </ul>
 
+        <div class="roster-section-title">QUICK TELEMETRY</div>
         <div class="roster-footer">
           <div class="system-stats">
             <div class="stat-row">
-              <span>CRCP Port</span>
-              <span class="val">7433 / 7434</span>
+              <span>CRCP Protocol</span>
+              <span class="val green">ARM64 JNI</span>
             </div>
             <div class="stat-row">
-              <span>Display Link</span>
+              <span>Display Stream</span>
               <span class="val">H.264 / 60 FPS</span>
             </div>
             <div class="stat-row">
-              <span>Subnet</span>
+              <span>Wi-Fi Subnet</span>
               <span class="val">192.168.0.x</span>
+            </div>
+            <div class="stat-row">
+              <span>AirCode Check</span>
+              <span class="val green">Auto-Bypass</span>
             </div>
           </div>
         </div>
@@ -119,15 +127,23 @@
               <span class="msg-time">Just now</span>
             </div>
             <div class="msg-body">
-              I'm actively scanning your home Wi-Fi for your TV. As soon as the TV wakes up, I'll take control of the display on the right panel. Tell me what you'd like me to do: launch an app, debloat running services, or click through TV menus!
+              I'm actively monitoring your Wi-Fi for your TV. Tell me what to do, or click any suggested prompt below!
             </div>
           </div>
+        </div>
+
+        <!-- Quick Action Suggestion Chips -->
+        <div class="quick-chips-bar">
+          <button class="suggestion-chip" data-prompt="Launch YouTube">▶️ YouTube</button>
+          <button class="suggestion-chip" data-prompt="Clean TV bloatware and free RAM">🧹 Clean Bloat</button>
+          <button class="suggestion-chip" data-prompt="Open TV Settings">⚙️ Settings</button>
+          <button class="suggestion-chip" data-prompt="Open Media Browser">📁 Media Files</button>
         </div>
 
         <!-- Grok Input Field -->
         <div class="chat-input-bar">
           <div class="input-wrapper">
-            <textarea id="userInput" rows="1" placeholder="Instruct GrokBot (e.g., 'Open YouTube', 'Clean TV bloatware', 'Volume up')..."></textarea>
+            <textarea id="userInput" rows="1" placeholder="Instruct GrokBot (e.g. 'Open YouTube', 'Clean bloatware', 'Volume up')..."></textarea>
             <button id="btnSend" class="send-action-btn">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
                 <path d="M5 12h14M12 5l7 7-7 7"/>
@@ -143,10 +159,11 @@
           <div class="preview-title">
             <span class="live-dot"></span>
             <span>COMPUTER USE PREVIEW</span>
+            <span class="tv-resolution-badge">1080P 60FPS</span>
           </div>
           <div class="preview-controls">
-            <button id="btnRescan" class="subtle-btn" title="Re-scan Wi-Fi">Auto-Scan</button>
-            <button id="btnFullscreen" class="subtle-btn" title="Expand View">Expand</button>
+            <button id="btnRescan" class="subtle-btn" title="Re-scan Wi-Fi">Wi-Fi Scan</button>
+            <button id="btnSimulatePower" class="subtle-btn" title="Toggle Simulation Link">Toggle Link</button>
           </div>
         </div>
 
@@ -162,6 +179,9 @@
             <div class="cursor-tag">GROK</div>
           </div>
 
+          <!-- Click Ripple Animation Layer -->
+          <div id="clickRipple" class="click-ripple"></div>
+
           <!-- Standby / Search Radar Screen -->
           <div class="standby-screen" id="standbyScreen">
             <div class="radar-circle">
@@ -169,6 +189,7 @@
             </div>
             <h4>Searching Home Wi-Fi</h4>
             <p>Scanning 192.168.0.x for CVTE Smart TV broadcast. Turn on your TV to auto-connect.</p>
+            <button id="btnWakeSim" class="cyber-outline-btn">Test with Simulated Display</button>
           </div>
         </div>
 

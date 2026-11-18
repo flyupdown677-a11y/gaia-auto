@@ -67,10 +67,27 @@ body.grok-dark {
   flex-direction: column;
 }
 
+.bot-title-line {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
 .bot-name {
   font-size: 13px;
   font-weight: 700;
   letter-spacing: -0.2px;
+}
+
+.active-badge {
+  font-size: 8px;
+  font-weight: 800;
+  background: rgba(16, 185, 129, 0.2);
+  color: var(--accent-green);
+  border: 1px solid rgba(16, 185, 129, 0.4);
+  padding: 1px 4px;
+  border-radius: 3px;
+  font-family: var(--font-mono);
 }
 
 .bot-role {
@@ -162,12 +179,12 @@ body.grok-dark {
 
 @media (max-width: 800px) {
   .bot-roster-pane {
-    display: none; /* Mobile responsiveness */
+    display: none;
   }
 }
 
 .roster-header {
-  padding: 14px 16px;
+  padding: 12px 16px;
   font-size: 10px;
   font-weight: 700;
   color: var(--text-muted);
@@ -178,12 +195,13 @@ body.grok-dark {
   border-bottom: 1px solid var(--border-subtle);
 }
 
-.icon-btn-subtle {
-  background: none;
-  border: none;
-  color: var(--text-muted);
-  font-size: 14px;
-  cursor: pointer;
+.roster-count {
+  font-size: 9px;
+  font-family: var(--font-mono);
+  background: #18202c;
+  color: var(--text-secondary);
+  padding: 1px 5px;
+  border-radius: 3px;
 }
 
 .roster-list {
@@ -249,16 +267,25 @@ body.grok-dark {
   text-overflow: ellipsis;
 }
 
+.roster-section-title {
+  padding: 8px 16px;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  color: var(--text-muted);
+  background: #0b0d12;
+  border-top: 1px solid var(--border-subtle);
+}
+
 .roster-footer {
   padding: 12px;
-  border-top: 1px solid var(--border-subtle);
   background: var(--bg-black);
 }
 
 .system-stats {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 5px;
   font-family: var(--font-mono);
   font-size: 10px;
   color: var(--text-muted);
@@ -273,9 +300,13 @@ body.grok-dark {
   color: var(--text-secondary);
 }
 
+.stat-row .val.green {
+  color: var(--accent-green);
+}
+
 /* Center: Chat & Actions Feed */
 .grok-chat-pane {
-  flex: 1.2;
+  flex: 1.1;
   background-color: var(--bg-black);
   display: flex;
   flex-direction: column;
@@ -402,7 +433,7 @@ body.grok-dark {
 }
 
 .action-step-card {
-  margin-top: 6px;
+  margin-top: 4px;
   background: #0d1219;
   border: 1px solid #1f2c3f;
   border-left: 3px solid var(--grok-cyan);
@@ -418,9 +449,37 @@ body.grok-dark {
   margin-bottom: 2px;
 }
 
+/* Quick Action Suggestion Chips */
+.quick-chips-bar {
+  display: flex;
+  gap: 6px;
+  padding: 8px 12px;
+  background: #0d0f14;
+  border-top: 1px solid var(--border-subtle);
+  overflow-x: auto;
+}
+
+.suggestion-chip {
+  background: var(--bg-card);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-subtle);
+  padding: 4px 10px;
+  border-radius: 14px;
+  font-size: 11px;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.suggestion-chip:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+  border-color: var(--border-active);
+}
+
 /* Chat Input Bar */
 .chat-input-bar {
-  padding: 12px;
+  padding: 10px 12px;
   border-top: 1px solid var(--border-subtle);
   background: var(--bg-surface);
 }
@@ -470,7 +529,7 @@ body.grok-dark {
 
 /* Right: Computer Preview Pane */
 .computer-preview-pane {
-  flex: 1.4;
+  flex: 1.5;
   background: #000;
   display: flex;
   flex-direction: column;
@@ -502,6 +561,15 @@ body.grok-dark {
   border-radius: 50%;
   background: var(--grok-cyan);
   box-shadow: 0 0 6px var(--grok-cyan);
+}
+
+.tv-resolution-badge {
+  font-size: 9px;
+  font-family: var(--font-mono);
+  background: #192331;
+  color: var(--text-secondary);
+  padding: 1px 5px;
+  border-radius: 3px;
 }
 
 .preview-controls {
@@ -550,7 +618,7 @@ body.grok-dark {
   transform: translate(0, 0);
   display: none;
   z-index: 10;
-  transition: all 0.2s cubic-bezier(0.1, 0.7, 0.1, 1);
+  transition: all 0.25s cubic-bezier(0.1, 0.7, 0.1, 1);
   filter: drop-shadow(0 0 8px rgba(0, 242, 254, 0.8));
 }
 
@@ -565,6 +633,26 @@ body.grok-dark {
   padding: 1px 4px;
   border-radius: 2px;
   font-family: var(--font-mono);
+}
+
+/* Click Ripple Layer */
+.click-ripple {
+  position: absolute;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 2px solid var(--grok-cyan);
+  background: rgba(0, 242, 254, 0.25);
+  pointer-events: none;
+  transform: translate(-50%, -50%) scale(0);
+  opacity: 0;
+  transition: transform 0.3s ease-out, opacity 0.3s ease-out;
+  z-index: 9;
+}
+
+.click-ripple.animate {
+  transform: translate(-50%, -50%) scale(1.6);
+  opacity: 1;
 }
 
 /* Standby Radar */
@@ -618,6 +706,22 @@ body.grok-dark {
   color: var(--text-muted);
   max-width: 260px;
   line-height: 1.4;
+  margin-bottom: 14px;
+}
+
+.cyber-outline-btn {
+  background: transparent;
+  color: var(--grok-cyan);
+  border: 1px solid var(--grok-cyan);
+  padding: 6px 14px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.cyber-outline-btn:hover {
+  background: var(--grok-cyan-glow);
 }
 
 /* Remote Strip */
