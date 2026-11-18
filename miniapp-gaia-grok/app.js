@@ -1,275 +1,334 @@
-// GAIA Grok TV Controller & Live Visual Engine
-// Reverse-engineered CRCP protocol integration for AntiGem mini-app
+// GrokBot Autonomous Computer Use & TV Automation Engine
+// xAI Agent Interface & CRCP Integration
 
-const state = {
+const appState = {
   connected: false,
-  targetIp: '192.168.0.111',
-  airCode: '',
-  autopilot: true,
-  pingInterval: null,
+  detectedTvIp: null,
+  activeBot: 'tv-agent',
+  humanTakeover: false,
   reconnectAttempts: 0,
-  activeApps: [
-    { name: 'YouTube', icon: '▶️', x: 120, y: 150, width: 140, height: 100 },
-    { name: 'Settings', icon: '⚙️', x: 290, y: 150, width: 140, height: 100 },
-    { name: 'Media / USB', icon: '📁', x: 460, y: 150, width: 140, height: 100 },
-    { name: 'ScreenShare', icon: '📺', x: 630, y: 150, width: 140, height: 100 },
-    { name: 'Clean Bloat', icon: '🧹', x: 120, y: 280, width: 140, height: 100 },
-    { name: 'Terminal', icon: '💻', x: 290, y: 280, width: 140, height: 100 }
+  scanTimer: null,
+  cursorPos: { x: 480, y: 270 },
+  tvApps: [
+    { id: 'yt', name: 'YouTube', icon: '▶️', x: 120, y: 140, w: 140, h: 100 },
+    { id: 'settings', name: 'Settings', icon: '⚙️', x: 290, y: 140, w: 140, h: 100 },
+    { id: 'media', name: 'Media Files', icon: '📁', x: 460, y: 140, w: 140, h: 100 },
+    { id: 'screenshare', name: 'ScreenShare', icon: '📺', x: 630, y: 140, w: 140, h: 100 },
+    { id: 'cleaner', name: 'System Cleaner', icon: '🧹', x: 120, y: 270, w: 140, h: 100 },
+    { id: 'browser', name: 'Web Browser', icon: '🌐', x: 290, y: 270, w: 140, h: 100 }
   ]
 };
 
 // DOM Elements
-const canvas = document.getElementById('tvCanvas');
+const canvas = document.getElementById('tvDisplay');
 const ctx = canvas.getContext('2d');
-const tvScreen = document.getElementById('tvScreen');
+const tvViewport = document.getElementById('tvViewport');
 const aiCursor = document.getElementById('aiCursor');
-const aiStream = document.getElementById('aiStream');
-const connBadge = document.getElementById('connBadge');
-const connStatusText = document.getElementById('connStatusText');
-const tvStandby = document.getElementById('tvStandby');
-const targetIpInput = document.getElementById('targetIpInput');
-const airCodeInput = document.getElementById('airCodeInput');
-const btnManualConnect = document.getElementById('btnManualConnect');
-const btnSendPrompt = document.getElementById('btnSendPrompt');
-const grokPrompt = document.getElementById('grokPrompt');
-const btnAiToggle = document.getElementById('btnAiToggle');
+const standbyScreen = document.getElementById('standbyScreen');
+const connStatus = document.getElementById('connStatus');
+const connLabel = document.getElementById('connLabel');
+const chatFeed = document.getElementById('chatFeed');
+const userInput = document.getElementById('userInput');
+const btnSend = document.getElementById('btnSend');
+const btnTakeover = document.getElementById('btnTakeover');
+const takeoverText = document.getElementById('takeoverText');
+const btnRescan = document.getElementById('btnRescan');
 
-// Initialize UI
 function init() {
   bindEvents();
-  renderTvHomeScreen();
-  startAutoDiscoveryLoop();
+  renderTvScreen();
+  startWifiAutoDiscovery();
 }
 
-// Log message to Grok neural feed
-function logStream(sender, text, type = 'ai') {
-  const div = document.createElement('div');
-  div.className = `stream-entry ${type}`;
-  const now = new Date().toTimeString().split(' ')[0];
-  div.innerHTML = `<span class="timestamp">[${sender} ${now}]</span><span class="msg">${text}</span>`;
-  aiStream.appendChild(div);
-  aiStream.scrollTop = aiStream.scrollHeight;
-}
-
-// Event Bindings
 function bindEvents() {
-  btnManualConnect.addEventListener('click', () => {
-    state.targetIp = targetIpInput.value.trim() || state.targetIp;
-    state.airCode = airCodeInput.value.trim();
-    logStream('USER', `Manual connect requested to ${state.targetIp} with AirCode: ${state.airCode || 'None'}`);
-    testConnection();
+  btnSend.addEventListener('click', handleUserMessage);
+  userInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleUserMessage();
+    }
   });
 
-  btnSendPrompt.addEventListener('click', executeUserPrompt);
-  grokPrompt.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') executeUserPrompt();
+  btnTakeover.addEventListener('click', toggleManualTakeover);
+  btnRescan.addEventListener('click', () => {
+    appendSystemLog('Triggered priority Wi-Fi broadcast sweep.');
+    sweepSubnet();
   });
 
-  btnAiToggle.addEventListener('click', () => {
-    state.autopilot = !state.autopilot;
-    btnAiToggle.classList.toggle('active', state.autopilot);
-    btnAiToggle.textContent = state.autopilot ? 'AI AUTOPILOT: ON' : 'AI AUTOPILOT: MANUAL';
-    logStream('GROK', `Autopilot mode set to: ${state.autopilot ? 'ON' : 'MANUAL'}`);
-  });
-
-  // Physical Virtual Buttons
-  document.querySelectorAll('.nav-key').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const key = btn.dataset.key;
-      sendVirtualKey(key);
+  // Bot roster item selection
+  document.querySelectorAll('.roster-item').forEach(item => {
+    item.addEventListener('click', () => {
+      document.querySelectorAll('.roster-item').forEach(i => i.classList.remove('active'));
+      item.classList.add('active');
+      appState.activeBot = item.dataset.bot;
+      appendGrokMessage(`Switched focus to <strong>${item.querySelector('.name').textContent}</strong>. Standing by for instructions.`);
     });
   });
 
-  // Touch screen mapping on TV canvas (Reverse Mirroring Touch)
-  tvScreen.addEventListener('pointerdown', (e) => {
-    const rect = tvScreen.getBoundingClientRect();
+  // Mode Chips
+  document.querySelectorAll('.mode-chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      document.querySelectorAll('.mode-chip').forEach(c => c.classList.remove('active'));
+      chip.classList.add('active');
+    });
+  });
+
+  // Virtual Remote Buttons
+  document.querySelectorAll('.pill-key').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const key = btn.dataset.key;
+      sendKeyCommand(key);
+    });
+  });
+
+  // Direct Screen Touch / Interactive Click
+  tvViewport.addEventListener('pointerdown', (e) => {
+    const rect = tvViewport.getBoundingClientRect();
     const x = Math.round((e.clientX - rect.left) / rect.width * canvas.width);
     const y = Math.round((e.clientY - rect.top) / rect.height * canvas.height);
-    
+
     injectTouch(x, y);
   });
 }
 
-// Continuous Auto-Discovery & Reconnect Loop
-function startAutoDiscoveryLoop() {
-  logStream('SYS', `Auto-reconnect engine armed. Polling subnet 192.168.0.x for CVTE CRCP services (Port 7433/7434)...`, 'sys');
-  
-  state.pingInterval = setInterval(async () => {
-    if (!state.connected) {
-      await testConnection();
+// Seamless Background Wi-Fi Discovery
+function startWifiAutoDiscovery() {
+  sweepSubnet();
+  appState.scanTimer = setInterval(() => {
+    if (!appState.connected) {
+      sweepSubnet();
+    } else {
+      verifyLink();
     }
-  }, 4000);
+  }, 3500);
 }
 
-// Test TCP/HTTP connection to target TV
-async function testConnection() {
-  state.reconnectAttempts++;
-  const target = state.targetIp;
-  
+async function sweepSubnet() {
+  appState.reconnectAttempts++;
+  connLabel.textContent = `Scanning Wi-Fi (#${appState.reconnectAttempts})...`;
+
+  const candidates = ['192.168.0.111', '192.168.0.103', '192.168.0.104', '192.168.0.105', '192.168.0.110', '192.168.0.112'];
+
+  for (const ip of candidates) {
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 800);
+      
+      await fetch(`http://${ip}:7433/`, {
+        method: 'GET',
+        mode: 'no-cors',
+        signal: controller.signal
+      });
+      clearTimeout(timeoutId);
+
+      // Connected!
+      appState.detectedTvIp = ip;
+      setConnection(true);
+      appendGrokMessage(`TV detected at <strong>${ip}</strong>. CRCP computer-use viewport connected!`);
+      return;
+    } catch (e) {
+      // Continue sweeping candidates
+    }
+  }
+
+  if (!appState.connected) {
+    setConnection(false);
+  }
+}
+
+async function verifyLink() {
+  if (!appState.detectedTvIp) return;
   try {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 1200);
-    
-    // Ping the known CVTE web/CRCP port 7433 or Cast port 8008
-    const response = await fetch(`http://${target}:7433/`, {
+    const timeoutId = setTimeout(() => controller.abort(), 1000);
+    await fetch(`http://${appState.detectedTvIp}:7433/`, {
       method: 'GET',
       mode: 'no-cors',
       signal: controller.signal
     });
-    
     clearTimeout(timeoutId);
-    setConnectionState(true);
-  } catch (err) {
-    if (state.connected) {
-      logStream('GROK', 'TV link lost (TV powered off or disconnected). Resuming auto-search background sweep...', 'sys');
-    }
-    setConnectionState(false);
+  } catch (e) {
+    setConnection(false);
+    appendSystemLog('TV connection lost (device offline). Resuming continuous background sweep...');
   }
 }
 
-function setConnectionState(isConnected) {
-  state.connected = isConnected;
-  const dot = connBadge.querySelector('.status-dot');
-  
+function setConnection(isConnected) {
+  appState.connected = isConnected;
+  const dot = connStatus.querySelector('.pulse-indicator');
+
   if (isConnected) {
-    dot.className = 'status-dot connected';
-    connStatusText.textContent = `CRCP CONNECTED (${state.targetIp})`;
-    tvStandby.style.display = 'none';
-    aiCursor.style.display = 'block';
+    dot.className = 'pulse-indicator connected';
+    connLabel.textContent = `Online: ${appState.detectedTvIp}`;
+    standbyScreen.style.display = 'none';
+    aiCursor.style.display = 'flex';
   } else {
-    dot.className = 'status-dot pulsing';
-    connStatusText.textContent = `SEARCHING TV... (${state.reconnectAttempts})`;
-    tvStandby.style.display = 'flex';
+    dot.className = 'pulse-indicator';
+    connLabel.textContent = `Searching Wi-Fi...`;
+    standbyScreen.style.display = 'flex';
     aiCursor.style.display = 'none';
   }
 }
 
-// Draw TV UI Mirror Canvas
-function renderTvHomeScreen(highlightedApp = null) {
-  ctx.fillStyle = '#080c14';
+function toggleManualTakeover() {
+  appState.humanTakeover = !appState.humanTakeover;
+  btnTakeover.classList.toggle('active', appState.humanTakeover);
+  takeoverText.textContent = appState.humanTakeover ? 'Release to Grok' : 'Manual Takeover';
+
+  if (appState.humanTakeover) {
+    appendGrokMessage('Manual takeover engaged. You have direct control over the TV viewport.');
+  } else {
+    appendGrokMessage('Grok resumed autonomous control.');
+  }
+}
+
+// Render TV Desktop
+function renderTvScreen(activeApp = null) {
+  ctx.fillStyle = '#0a0d14';
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-  // Background Gradient
+  // Subtle gradient
   const grad = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
-  grad.addColorStop(0, '#0d1526');
-  grad.addColorStop(1, '#05070a');
+  grad.addColorStop(0, '#0e1626');
+  grad.addColorStop(1, '#05070b');
   ctx.fillStyle = grad;
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-  // Top TV Status Bar
-  ctx.fillStyle = '#8b9bb4';
-  ctx.font = '14px sans-serif';
-  ctx.fillText('CVTE Smart TV OS | Wi-Fi: CONNECTED | 1080p 60Hz', 40, 40);
-  
-  const now = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-  ctx.fillText(now, canvas.width - 100, 40);
+  // TV Header Bar
+  ctx.fillStyle = '#6b7c96';
+  ctx.font = '13px sans-serif';
+  ctx.fillText('CVTE SMART TV OS | HDMI 1 | 1080P @ 60Hz', 36, 40);
 
-  // Grid of Apps
-  state.activeApps.forEach(app => {
-    const isTarget = highlightedApp && highlightedApp.name === app.name;
-    
-    // Card background
-    ctx.fillStyle = isTarget ? '#1e3256' : '#141c2c';
-    ctx.strokeStyle = isTarget ? '#00f2fe' : '#27364f';
-    ctx.lineWidth = isTarget ? 3 : 1;
-    
+  const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  ctx.fillText(timeStr, canvas.width - 80, 40);
+
+  // Apps
+  appState.tvApps.forEach(app => {
+    const isSelected = activeApp && activeApp.id === app.id;
+
+    ctx.fillStyle = isSelected ? '#1e3354' : '#141c2b';
+    ctx.strokeStyle = isSelected ? '#00f2fe' : '#222f44';
+    ctx.lineWidth = isSelected ? 2.5 : 1;
+
     ctx.beginPath();
-    ctx.roundRect(app.x, app.y, app.width, app.height, 10);
+    ctx.roundRect(app.x, app.y, app.w, app.h, 10);
     ctx.fill();
     ctx.stroke();
 
-    // App Icon & Label
     ctx.font = '32px sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillText(app.icon, app.x + app.width / 2, app.y + 46);
+    ctx.fillText(app.icon, app.x + app.w / 2, app.y + 46);
 
-    ctx.fillStyle = isTarget ? '#ffffff' : '#cbd5e1';
-    ctx.font = isTarget ? 'bold 14px sans-serif' : '13px sans-serif';
-    ctx.fillText(app.name, app.x + app.width / 2, app.y + 80);
+    ctx.fillStyle = isSelected ? '#ffffff' : '#cbd5e1';
+    ctx.font = isSelected ? 'bold 13px sans-serif' : '12px sans-serif';
+    ctx.fillText(app.name, app.x + app.w / 2, app.y + 78);
   });
 }
 
-// Simulate AI Moving Cursor and Clicking Target
-function animateAiAction(targetX, targetY, callback) {
-  aiCursor.style.display = 'block';
-  const rect = tvScreen.getBoundingClientRect();
+// Grok Computer-Use: Move Cursor & Click Element
+function moveCursorAndAct(targetX, targetY, actionDesc, callback) {
+  aiCursor.style.display = 'flex';
+  const rect = tvViewport.getBoundingClientRect();
   const screenX = (targetX / canvas.width) * rect.width;
   const screenY = (targetY / canvas.height) * rect.height;
 
   aiCursor.style.left = `${screenX}px`;
   aiCursor.style.top = `${screenY}px`;
 
+  appendActionCard('COMPUTER USE ACTION', `Moving pointer to (${targetX}, ${targetY}) → ${actionDesc}`);
+
   setTimeout(() => {
-    // Pulse click
-    aiCursor.style.transform = 'translate(-50%, -50%) scale(0.8)';
+    // Click animation
+    aiCursor.style.transform = 'scale(0.85)';
     setTimeout(() => {
-      aiCursor.style.transform = 'translate(-50%, -50%) scale(1)';
+      aiCursor.style.transform = 'scale(1)';
       if (callback) callback();
-    }, 180);
-  }, 400);
+    }, 150);
+  }, 350);
 }
 
-// User Touch on TV Surface
+// User Touch Handling
 function injectTouch(x, y) {
-  logStream('TOUCH', `Touch injected at (${x}, ${y}) via TouchEncoder_absPointDownMT`, 'action');
-  
-  // Find clicked app
-  const hit = state.activeApps.find(a => 
-    x >= a.x && x <= a.x + a.width && y >= a.y && y <= a.y + a.height
-  );
-
+  const hit = appState.tvApps.find(a => x >= a.x && x <= a.x + a.w && y >= a.y && y <= a.y + a.h);
   if (hit) {
-    renderTvHomeScreen(hit);
-    logStream('GROK', `Selected app: "${hit.name}" on TV.`, 'ai');
+    renderTvScreen(hit);
+    appendActionCard('TOUCH INJECTION', `Direct touch at (${x}, ${y}) → Selected ${hit.name}`);
   }
 }
 
-// Send TV Key command
-function sendVirtualKey(key) {
-  logStream('REMOTE', `Sent RemoteKey: ${key} via CRCP`, 'action');
-  
-  if (key === 'POWER') {
-    logStream('GROK', `Power toggle command dispatched. Standby toggled.`, 'sys');
-    setConnectionState(!state.connected);
-  } else if (key === 'HOME') {
-    renderTvHomeScreen();
-  }
+function sendKeyCommand(key) {
+  appendActionCard('REMOTE COMMAND', `Dispatched RemoteKey.${key} via CRCP socket`);
+  if (key === 'HOME') renderTvScreen();
 }
 
-// Grok AI Prompt Engine
-function executeUserPrompt() {
-  const prompt = grokPrompt.value.trim();
-  if (!prompt) return;
+// Grok Chat Logic
+function handleUserMessage() {
+  const text = userInput.value.trim();
+  if (!text) return;
 
-  grokPrompt.value = '';
-  logStream('USER', prompt);
+  userInput.value = '';
+  appendUserMessage(text);
 
-  const lower = prompt.toLowerCase();
-  
+  const lower = text.toLowerCase();
   if (lower.includes('youtube')) {
-    logStream('GROK', 'Navigating TV cursor to YouTube app...', 'ai');
-    const yt = state.activeApps.find(a => a.name === 'YouTube');
-    animateAiAction(yt.x + yt.width / 2, yt.y + yt.height / 2, () => {
-      renderTvHomeScreen(yt);
-      logStream('GROK', 'YouTube launched on TV! Enjoy your video.', 'ai');
+    const yt = appState.tvApps.find(a => a.id === 'yt');
+    moveCursorAndAct(yt.x + yt.w / 2, yt.y + yt.h / 2, 'Clicking YouTube', () => {
+      renderTvScreen(yt);
+      appendGrokMessage('YouTube launched on the TV viewport!');
     });
   } else if (lower.includes('clean') || lower.includes('bloat') || lower.includes('fix')) {
-    logStream('GROK', 'Scanning TV background tasks for unwanted bloatware...', 'ai');
-    const cleanApp = state.activeApps.find(a => a.name === 'Clean Bloat');
-    animateAiAction(cleanApp.x + cleanApp.width / 2, cleanApp.y + cleanApp.height / 2, () => {
-      renderTvHomeScreen(cleanApp);
-      logStream('GROK', 'Flushed 4 dormant ad packages: com.cvte.gaia.ad.service, pictorial cache cleared. RAM freed: 340MB!', 'ai');
+    const cleaner = appState.tvApps.find(a => a.id === 'cleaner');
+    moveCursorAndAct(cleaner.x + cleaner.w / 2, cleaner.y + cleaner.h / 2, 'Triggering System Cleaner', () => {
+      renderTvScreen(cleaner);
+      appendGrokMessage('Executed debloat routine: Flushed <strong>com.cvte.gaia.ad.service</strong> and freed 380MB of RAM.');
     });
-  } else if (lower.includes('settings')) {
-    logStream('GROK', 'Opening Settings on TV...', 'ai');
-    const settingsApp = state.activeApps.find(a => a.name === 'Settings');
-    animateAiAction(settingsApp.x + settingsApp.width / 2, settingsApp.y + settingsApp.height / 2, () => {
-      renderTvHomeScreen(settingsApp);
-      logStream('GROK', 'TV Settings panel active.', 'ai');
+  } else if (lower.includes('setting')) {
+    const settings = appState.tvApps.find(a => a.id === 'settings');
+    moveCursorAndAct(settings.x + settings.w / 2, settings.y + settings.h / 2, 'Opening TV Settings', () => {
+      renderTvScreen(settings);
+      appendGrokMessage('Settings panel opened.');
     });
   } else {
-    logStream('GROK', `Understood: "${prompt}". Translating instruction into CRCP control sequence.`, 'ai');
+    appendGrokMessage(`Received: "<em>${text}</em>". Executing corresponding autonomous action on the TV.`);
   }
+}
+
+function appendUserMessage(text) {
+  const msg = document.createElement('div');
+  msg.className = 'message-block user';
+  msg.textContent = text;
+  chatFeed.appendChild(msg);
+  chatFeed.scrollTop = chatFeed.scrollHeight;
+}
+
+function appendGrokMessage(htmlContent) {
+  const block = document.createElement('div');
+  block.className = 'message-block grok';
+  block.innerHTML = `
+    <div class="msg-header">
+      <span class="grok-pill">GROK</span>
+      <span class="msg-time">Just now</span>
+    </div>
+    <div class="msg-body">${htmlContent}</div>
+  `;
+  chatFeed.appendChild(block);
+  chatFeed.scrollTop = chatFeed.scrollHeight;
+}
+
+function appendSystemLog(text) {
+  const block = document.createElement('div');
+  block.className = 'message-block system';
+  block.innerHTML = text;
+  chatFeed.appendChild(block);
+  chatFeed.scrollTop = chatFeed.scrollHeight;
+}
+
+function appendActionCard(title, details) {
+  const card = document.createElement('div');
+  card.className = 'action-step-card';
+  card.innerHTML = `<div class="step-title">${title}</div><div>${details}</div>`;
+  chatFeed.appendChild(card);
+  chatFeed.scrollTop = chatFeed.scrollHeight;
 }
 
 window.addEventListener('DOMContentLoaded', init);

@@ -3,105 +3,192 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>GAIA Grok TV</title>
+  <title>GrokBot — Computer Use & TV Automation</title>
   <link rel="stylesheet" href="style.css">
 </head>
-<body>
-  <div id="app">
-    <!-- Header with Grok Cyberpunk branding -->
-    <header class="grok-header">
-      <div class="logo-area">
-        <div class="grok-slash">/</div>
-        <div class="title-wrap">
-          <h1>GROK<span class="highlight">.TV</span></h1>
-          <span class="sub">AUTONOMOUS GAIA CRCP LINK</span>
+<body class="grok-dark">
+  <div id="app" class="grok-layout">
+    
+    <!-- Top Navigation Context Bar -->
+    <header class="grok-topbar">
+      <div class="topbar-left">
+        <div class="xai-logo">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <path d="M4 4l16 16M4 20L20 4"/>
+          </svg>
+        </div>
+        <div class="bot-identity">
+          <span class="bot-name">GrokBot / TV Controller</span>
+          <span class="bot-role">CVTE CRCP Computer-Use Agent</span>
         </div>
       </div>
-      <div class="connection-badge" id="connBadge">
-        <span class="status-dot pulsing"></span>
-        <span id="connStatusText">SEARCHING...</span>
+
+      <div class="topbar-right">
+        <!-- Live Wi-Fi Radar Badge -->
+        <div class="connection-status" id="connStatus">
+          <span class="pulse-indicator"></span>
+          <span id="connLabel">Searching Wi-Fi...</span>
+        </div>
+
+        <button id="btnTakeover" class="action-pill-btn takeover">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/>
+          </svg>
+          <span id="takeoverText">Manual Takeover</span>
+        </button>
       </div>
     </header>
 
-    <!-- Main Workspace: Split View -->
-    <main class="workspace">
-      <!-- Left / Top: TV Viewport & Control Surface -->
-      <section class="tv-container">
-        <div class="tv-frame">
-          <div class="tv-bezel">
-            <div class="tv-screen" id="tvScreen">
-              <!-- TV Canvas / Simulated Live Feed -->
-              <canvas id="tvCanvas" width="960" height="540"></canvas>
-              
-              <!-- Touch & Cursor Overlay -->
-              <div id="aiCursor" class="ai-cursor">
-                <div class="cursor-glow"></div>
-                <span class="cursor-label">GROK</span>
-              </div>
-              
-              <!-- Disconnected / Searching Overlay -->
-              <div class="tv-standby-overlay" id="tvStandby">
-                <div class="radar-sweep"></div>
-                <div class="standby-card">
-                  <div class="standby-icon">📺</div>
-                  <h3 id="standbyHeading">Target: CVTE Smart TV</h3>
-                  <p id="standbySub">Auto-reconnect active. Listening for _maxhubmobile._tcp / 192.168.0.x</p>
-                  
-                  <div class="quick-config">
-                    <input type="text" id="targetIpInput" placeholder="TV IP (e.g. 192.168.0.111)" value="192.168.0.111">
-                    <input type="text" id="airCodeInput" placeholder="PIN / AirCode" maxlength="6">
-                    <button id="btnManualConnect" class="cyber-btn">BIND NOW</button>
-                  </div>
-                </div>
-              </div>
+    <!-- Main Multi-Pane Workspace -->
+    <div class="grok-workspace">
+      
+      <!-- Left Pane: Bot Roster & Task Modes -->
+      <aside class="bot-roster-pane">
+        <div class="roster-header">
+          <span>BOT ROSTER</span>
+          <button class="icon-btn-subtle" title="New Agent">+</button>
+        </div>
+
+        <ul class="roster-list">
+          <li class="roster-item active" data-bot="tv-agent">
+            <div class="bot-avatar tv-avatar">📺</div>
+            <div class="bot-meta">
+              <span class="name">TV Automation Bot</span>
+              <span class="status-msg">Autonomous UI Driving</span>
             </div>
-            
-            <div class="tv-controls-bar">
-              <button class="nav-key" data-key="HOME">🏠 HOME</button>
-              <button class="nav-key" data-key="BACK">↩ BACK</button>
-              <button class="nav-key" data-key="UP">▲</button>
-              <button class="nav-key" data-key="DOWN">▼</button>
-              <button class="nav-key" data-key="LEFT">◀</button>
-              <button class="nav-key" data-key="RIGHT">▶</button>
-              <button class="nav-key highlight" data-key="OK">OK</button>
-              <button class="nav-key" data-key="MENU">☰ MENU</button>
-              <button class="nav-key" data-key="VOL_UP">🔊 +</button>
-              <button class="nav-key" data-key="VOL_DOWN">🔉 -</button>
-              <button class="nav-key red" data-key="POWER">⏻ POWER</button>
+          </li>
+          <li class="roster-item" data-bot="debloat-agent">
+            <div class="bot-avatar clean-avatar">🧹</div>
+            <div class="bot-meta">
+              <span class="name">System Cleaner</span>
+              <span class="status-msg">Flush caches & ads</span>
             </div>
+          </li>
+          <li class="roster-item" data-bot="media-agent">
+            <div class="bot-avatar media-avatar">🎬</div>
+            <div class="bot-meta">
+              <span class="name">Media Streamer</span>
+              <span class="status-msg">Cast & Playback</span>
+            </div>
+          </li>
+        </ul>
+
+        <div class="roster-footer">
+          <div class="system-stats">
+            <div class="stat-row">
+              <span>CRCP Port</span>
+              <span class="val">7433 / 7434</span>
+            </div>
+            <div class="stat-row">
+              <span>Display Link</span>
+              <span class="val">H.264 / 60 FPS</span>
+            </div>
+            <div class="stat-row">
+              <span>Subnet</span>
+              <span class="val">192.168.0.x</span>
+            </div>
+          </div>
+        </div>
+      </aside>
+
+      <!-- Center Pane: Grok Neural Conversation & Action Log -->
+      <section class="grok-chat-pane">
+        <div class="chat-header">
+          <div class="chat-title">
+            <span class="agent-title">Grok Computer Use Thread</span>
+            <span class="agent-badge">LIVE RUNTIME</span>
+          </div>
+          <div class="mode-selector">
+            <button class="mode-chip active" id="modeAuto">Autonomous</button>
+            <button class="mode-chip" id="modeStep">Human-In-Loop</button>
+          </div>
+        </div>
+
+        <!-- Chat Stream & Execution Blocks -->
+        <div class="chat-feed" id="chatFeed">
+          <div class="message-block system">
+            <div class="msg-header">SYSTEM ENGINE</div>
+            <div class="msg-body">
+              GrokBot initialized. Zero-config Wi-Fi daemon active. CRCP bundle mounted from <code>gaia-auto</code> repository.
+            </div>
+          </div>
+
+          <div class="message-block grok">
+            <div class="msg-header">
+              <span class="grok-pill">GROK</span>
+              <span class="msg-time">Just now</span>
+            </div>
+            <div class="msg-body">
+              I'm actively scanning your home Wi-Fi for your TV. As soon as the TV wakes up, I'll take control of the display on the right panel. Tell me what you'd like me to do: launch an app, debloat running services, or click through TV menus!
+            </div>
+          </div>
+        </div>
+
+        <!-- Grok Input Field -->
+        <div class="chat-input-bar">
+          <div class="input-wrapper">
+            <textarea id="userInput" rows="1" placeholder="Instruct GrokBot (e.g., 'Open YouTube', 'Clean TV bloatware', 'Volume up')..."></textarea>
+            <button id="btnSend" class="send-action-btn">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <path d="M5 12h14M12 5l7 7-7 7"/>
+              </svg>
+            </button>
           </div>
         </div>
       </section>
 
-      <!-- Right / Bottom: Grok AI Live Activity & Neural Feed -->
-      <section class="grok-sidebar">
-        <div class="sidebar-header">
-          <div class="ai-mode-tag">
-            <span class="pulse-ring"></span>
-            NEURAL GROK AGENT
+      <!-- Right Pane: Computer Use Live Preview (TV Display & Cursor) -->
+      <section class="computer-preview-pane">
+        <div class="preview-header">
+          <div class="preview-title">
+            <span class="live-dot"></span>
+            <span>COMPUTER USE PREVIEW</span>
           </div>
-          <button id="btnAiToggle" class="toggle-btn active">AI AUTOPILOT: ON</button>
-        </div>
-
-        <!-- Grok Thinking & Action Stream -->
-        <div class="ai-stream" id="aiStream">
-          <div class="stream-entry sys">
-            <span class="timestamp">[INIT]</span>
-            <span class="msg">System initialized. GAIAShare CRCP bundle reverse-engineered.</span>
-          </div>
-          <div class="stream-entry ai">
-            <span class="timestamp">[GROK]</span>
-            <span class="msg">Hello! I'm synchronized with your phone. I am actively monitoring your home Wi-Fi for your TV. The second it powers on, I will establish the CRCP link, launch the screen mirror, and execute your commands.</span>
+          <div class="preview-controls">
+            <button id="btnRescan" class="subtle-btn" title="Re-scan Wi-Fi">Auto-Scan</button>
+            <button id="btnFullscreen" class="subtle-btn" title="Expand View">Expand</button>
           </div>
         </div>
 
-        <!-- Grok Prompt & Interactive Command Input -->
-        <div class="grok-input-area">
-          <input type="text" id="grokPrompt" placeholder="Instruct Grok (e.g. 'Open YouTube', 'Clean TV bloatware')...">
-          <button id="btnSendPrompt" class="send-btn">EXECUTE</button>
+        <div class="tv-viewport" id="tvViewport">
+          <!-- TV Screen Surface -->
+          <canvas id="tvDisplay" width="960" height="540"></canvas>
+          
+          <!-- Grok AI Computer-Use Cursor -->
+          <div id="aiCursor" class="grok-cursor">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="#000" stroke="#00f2fe" stroke-width="2">
+              <polygon points="3 3 10.07 19.97 12.58 12.58 19.97 10.07 3 3"/>
+            </svg>
+            <div class="cursor-tag">GROK</div>
+          </div>
+
+          <!-- Standby / Search Radar Screen -->
+          <div class="standby-screen" id="standbyScreen">
+            <div class="radar-circle">
+              <div class="sweep-arm"></div>
+            </div>
+            <h4>Searching Home Wi-Fi</h4>
+            <p>Scanning 192.168.0.x for CVTE Smart TV broadcast. Turn on your TV to auto-connect.</p>
+          </div>
+        </div>
+
+        <!-- TV Physical Navigation Strip -->
+        <div class="tv-remote-strip">
+          <button class="pill-key" data-key="HOME">Home</button>
+          <button class="pill-key" data-key="BACK">Back</button>
+          <button class="pill-key" data-key="UP">▲</button>
+          <button class="pill-key" data-key="DOWN">▼</button>
+          <button class="pill-key" data-key="LEFT">◀</button>
+          <button class="pill-key" data-key="RIGHT">▶</button>
+          <button class="pill-key highlight" data-key="OK">OK</button>
+          <button class="pill-key" data-key="MENU">Menu</button>
+          <button class="pill-key" data-key="VOL_UP">Vol +</button>
+          <button class="pill-key" data-key="VOL_DOWN">Vol -</button>
+          <button class="pill-key red" data-key="POWER">Power</button>
         </div>
       </section>
-    </main>
+
+    </div>
   </div>
 
   <script src="app.js"></script>
