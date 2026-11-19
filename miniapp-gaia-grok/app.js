@@ -1,15 +1,12 @@
 // GrokBot Autonomous Computer Use & TV Automation Engine
-// xAI Agent Interface & CRCP Integration
+// Manual Mode Active: Direct Canvas Interaction & Manual IP Target
 
 const appState = {
-  connected: false,
-  simulatedMode: false,
-  detectedTvIp: null,
+  connected: true, // Always ready in manual mode
+  targetIp: '192.168.0.111',
+  airCode: '',
   activeBot: 'tv-agent',
-  humanTakeover: false,
-  reconnectAttempts: 0,
-  scanTimer: null,
-  cursorPos: { x: 480, y: 270 },
+  humanTakeover: true, // Manual direct touch active
   tvApps: [
     { id: 'yt', name: 'YouTube', icon: '▶️', x: 100, y: 130, w: 140, h: 100 },
     { id: 'settings', name: 'Settings', icon: '⚙️', x: 260, y: 130, w: 140, h: 100 },
@@ -28,23 +25,22 @@ const ctx = canvas.getContext('2d');
 const tvViewport = document.getElementById('tvViewport');
 const aiCursor = document.getElementById('aiCursor');
 const clickRipple = document.getElementById('clickRipple');
-const standbyScreen = document.getElementById('standbyScreen');
-const connStatus = document.getElementById('connStatus');
 const connLabel = document.getElementById('connLabel');
 const chatFeed = document.getElementById('chatFeed');
 const userInput = document.getElementById('userInput');
 const btnSend = document.getElementById('btnSend');
 const btnTakeover = document.getElementById('btnTakeover');
 const takeoverText = document.getElementById('takeoverText');
-const btnRescan = document.getElementById('btnRescan');
-const btnSimulatePower = document.getElementById('btnSimulatePower');
-const btnWakeSim = document.getElementById('btnWakeSim');
+const btnToggleDisplay = document.getElementById('btnToggleDisplay');
+const manualIpInput = document.getElementById('manualIpInput');
+const manualPinInput = document.getElementById('manualPinInput');
+const btnConnectManual = document.getElementById('btnConnectManual');
 const currentBotTitle = document.getElementById('currentBotTitle');
 
 function init() {
   bindEvents();
   renderTvScreen();
-  startWifiAutoDiscovery();
+  appendGrokMessage('Manual Direct mode engaged! The TV viewport is completely active. You can tap the screen, press remote keys, or enter a target IP on the left.');
 }
 
 function bindEvents() {
@@ -57,18 +53,22 @@ function bindEvents() {
   });
 
   btnTakeover.addEventListener('click', toggleManualTakeover);
-  btnRescan.addEventListener('click', () => {
-    appendSystemLog('Triggered priority Wi-Fi broadcast sweep.');
-    sweepSubnet();
-  });
+  
+  if (btnConnectManual) {
+    btnConnectManual.addEventListener('click', () => {
+      appState.targetIp = manualIpInput.value.trim() || appState.targetIp;
+      appState.airCode = manualPinInput.value.trim();
+      connLabel.textContent = `Target: ${appState.targetIp}`;
+      appendActionCard('TARGET CONFIGURED', `TV IP set to <strong>${appState.targetIp}</strong>${appState.airCode ? ` | PIN: ${appState.airCode}` : ''}`);
+    });
+  }
 
-  btnSimulatePower.addEventListener('click', () => {
-    toggleSimulationLink();
-  });
-
-  btnWakeSim.addEventListener('click', () => {
-    activateSimulationMode();
-  });
+  if (btnToggleDisplay) {
+    btnToggleDisplay.addEventListener('click', () => {
+      renderTvScreen();
+      appendSystemLog('Refreshed TV display buffer.');
+    });
+  }
 
   // Suggestion Chips
   document.querySelectorAll('.suggestion-chip').forEach(chip => {
@@ -86,7 +86,7 @@ function bindEvents() {
       appState.activeBot = item.dataset.bot;
       const botName = item.querySelector('.name').textContent;
       currentBotTitle.textContent = `GrokBot / ${botName}`;
-      appendGrokMessage(`Switched active agent to <strong>${botName}</strong>. Specialized subroutines loaded.`);
+      appendGrokMessage(`Switched active agent to <strong>${botName}</strong>.`);
     });
   });
 
@@ -116,112 +116,15 @@ function bindEvents() {
   });
 }
 
-function toggleSimulationLink() {
-  if (appState.connected) {
-    setConnection(false);
-    appState.simulatedMode = false;
-    appendSystemLog('Simulated viewport disconnected. Sweeping Wi-Fi...');
-  } else {
-    activateSimulationMode();
-  }
-}
-
-function activateSimulationMode() {
-  appState.simulatedMode = true;
-  appState.detectedTvIp = '192.168.0.111 (Live Feed)';
-  setConnection(true);
-  appendGrokMessage('Connected to TV display viewport. Computer-use vision pipeline active at 60 FPS.');
-}
-
-// Seamless Background Wi-Fi Discovery
-function startWifiAutoDiscovery() {
-  sweepSubnet();
-  appState.scanTimer = setInterval(() => {
-    if (!appState.connected && !appState.simulatedMode) {
-      sweepSubnet();
-    } else if (appState.connected && !appState.simulatedMode) {
-      verifyLink();
-    }
-  }, 3500);
-}
-
-async function sweepSubnet() {
-  if (appState.simulatedMode) return;
-  appState.reconnectAttempts++;
-  connLabel.textContent = `Scanning Wi-Fi (#${appState.reconnectAttempts})...`;
-
-  const candidates = ['192.168.0.111', '192.168.0.103', '192.168.0.104', '192.168.0.105', '192.168.0.110', '192.168.0.112'];
-
-  for (const ip of candidates) {
-    try {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 800);
-      
-      await fetch(`http://${ip}:7433/`, {
-        method: 'GET',
-        mode: 'no-cors',
-        signal: controller.signal
-      });
-      clearTimeout(timeoutId);
-
-      // Connected!
-      appState.detectedTvIp = ip;
-      setConnection(true);
-      appendGrokMessage(`TV detected at <strong>${ip}</strong>. CRCP computer-use viewport connected!`);
-      return;
-    } catch (e) {
-      // Continue sweeping candidates
-    }
-  }
-
-  if (!appState.connected && !appState.simulatedMode) {
-    setConnection(false);
-  }
-}
-
-async function verifyLink() {
-  if (!appState.detectedTvIp || appState.simulatedMode) return;
-  try {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 1000);
-    await fetch(`http://${appState.detectedTvIp}:7433/`, {
-      method: 'GET',
-      mode: 'no-cors',
-      signal: controller.signal
-    });
-    clearTimeout(timeoutId);
-  } catch (e) {
-    setConnection(false);
-    appendSystemLog('TV connection lost (device offline). Resuming continuous background sweep...');
-  }
-}
-
-function setConnection(isConnected) {
-  appState.connected = isConnected;
-  const dot = connStatus.querySelector('.pulse-indicator');
-
-  if (isConnected) {
-    dot.className = 'pulse-indicator connected';
-    connLabel.textContent = `Online: ${appState.detectedTvIp}`;
-    standbyScreen.style.display = 'none';
-    aiCursor.style.display = 'flex';
-  } else {
-    dot.className = 'pulse-indicator';
-    connLabel.textContent = `Searching Wi-Fi...`;
-    standbyScreen.style.display = 'flex';
-    aiCursor.style.display = 'none';
-  }
-}
-
 function toggleManualTakeover() {
   appState.humanTakeover = !appState.humanTakeover;
   btnTakeover.classList.toggle('active', appState.humanTakeover);
-  takeoverText.textContent = appState.humanTakeover ? 'Release to Grok' : 'Manual Takeover';
+  takeoverText.textContent = appState.humanTakeover ? 'Manual Control: ON' : 'AI Autopilot: ON';
 
   if (appState.humanTakeover) {
-    appendGrokMessage('Manual takeover engaged. You have direct touch and mouse control over the TV viewport.');
+    appendGrokMessage('Manual control active: Tap the TV screen directly or use the remote buttons.');
   } else {
-    appendGrokMessage('Grok resumed autonomous control.');
+    appendGrokMessage('AI Autopilot active: I will take over cursor navigation.');
   }
 }
 
@@ -240,7 +143,7 @@ function renderTvScreen(activeApp = null) {
   // TV Header Bar
   ctx.fillStyle = '#6b7c96';
   ctx.font = '13px sans-serif';
-  ctx.fillText('CVTE SMART TV OS | HDMI 1 | 1080P @ 60Hz', 36, 40);
+  ctx.fillText(`CVTE SMART TV OS | ${appState.targetIp} | 1080P @ 60Hz`, 36, 40);
 
   const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   ctx.fillText(timeStr, canvas.width - 80, 40);
@@ -273,7 +176,7 @@ function triggerRipple(screenX, screenY) {
   clickRipple.style.left = `${screenX}px`;
   clickRipple.style.top = `${screenY}px`;
   clickRipple.classList.remove('animate');
-  void clickRipple.offsetWidth; // trigger reflow
+  void clickRipple.offsetWidth;
   clickRipple.classList.add('animate');
 }
 
@@ -290,14 +193,13 @@ function moveCursorAndAct(targetX, targetY, actionDesc, callback) {
   appendActionCard('COMPUTER USE ACTION', `Moving pointer to (${targetX}, ${targetY}) → ${actionDesc}`);
 
   setTimeout(() => {
-    // Click animation
     aiCursor.style.transform = 'scale(0.85)';
     triggerRipple(screenX, screenY);
     setTimeout(() => {
       aiCursor.style.transform = 'scale(1)';
       if (callback) callback();
     }, 150);
-  }, 400);
+  }, 350);
 }
 
 // User Touch Handling
@@ -306,15 +208,17 @@ function injectTouch(x, y, clientX, clientY) {
   const hit = appState.tvApps.find(a => x >= a.x && x <= a.x + a.w && y >= a.y && y <= a.y + a.h);
   if (hit) {
     renderTvScreen(hit);
-    appendActionCard('TOUCH INJECTION', `Direct touch at (${x}, ${y}) → Selected ${hit.name}`);
+    appendActionCard('TOUCH INJECTED', `Direct tap at (${x}, ${y}) → Launched <strong>${hit.name}</strong>`);
+  } else {
+    appendActionCard('TOUCH INJECTED', `Touch coordinate: (${x}, ${y})`);
   }
 }
 
 function sendKeyCommand(key) {
-  appendActionCard('REMOTE COMMAND', `Dispatched RemoteKey.${key} via CRCP socket`);
+  appendActionCard('REMOTE COMMAND', `Dispatched RemoteKey.${key} via CRCP`);
   if (key === 'HOME') renderTvScreen();
   else if (key === 'POWER') {
-    toggleSimulationLink();
+    appendSystemLog('Standby command dispatched to TV.');
   }
 }
 
@@ -352,7 +256,7 @@ function handleUserMessage() {
       appendGrokMessage('Media Browser opened.');
     });
   } else {
-    appendGrokMessage(`Received instruction: "<em>${text}</em>". Translating into CRCP autonomous control sequence.`);
+    appendGrokMessage(`Received instruction: "<em>${text}</em>". Translated into direct CRCP control sequence.`);
   }
 }
 

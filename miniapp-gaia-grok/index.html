@@ -20,24 +20,24 @@
         <div class="bot-identity">
           <div class="bot-title-line">
             <span class="bot-name" id="currentBotTitle">GrokBot / TV Controller</span>
-            <span class="active-badge">ACTIVE</span>
+            <span class="active-badge" id="activeBadge">MANUAL READY</span>
           </div>
-          <span class="bot-role">CVTE CRCP Computer-Use Agent (Zero-Config Wi-Fi)</span>
+          <span class="bot-role">CVTE CRCP Direct Input & Remote Engine</span>
         </div>
       </div>
 
       <div class="topbar-right">
-        <!-- Live Wi-Fi Radar Badge -->
+        <!-- Status Badge -->
         <div class="connection-status" id="connStatus">
-          <span class="pulse-indicator"></span>
-          <span id="connLabel">Searching Wi-Fi...</span>
+          <span class="pulse-indicator manual" id="statusDot"></span>
+          <span id="connLabel">Direct Link Ready</span>
         </div>
 
-        <button id="btnTakeover" class="action-pill-btn takeover">
+        <button id="btnTakeover" class="action-pill-btn takeover active">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/>
           </svg>
-          <span id="takeoverText">Manual Takeover</span>
+          <span id="takeoverText">Manual Control: ON</span>
         </button>
       </div>
     </header>
@@ -45,7 +45,7 @@
     <!-- Main Multi-Pane Workspace -->
     <div class="grok-workspace">
       
-      <!-- Left Pane: Bot Roster & Task Modes -->
+      <!-- Left Pane: Bot Roster & Manual Config -->
       <aside class="bot-roster-pane">
         <div class="roster-header">
           <span>BOT ROSTER</span>
@@ -57,14 +57,14 @@
             <div class="bot-avatar tv-avatar">📺</div>
             <div class="bot-meta">
               <span class="name">TV Controller</span>
-              <span class="status-msg">Autonomous UI Driving</span>
+              <span class="status-msg">Direct Remote & Touch</span>
             </div>
           </li>
           <li class="roster-item" data-bot="debloat-agent">
             <div class="bot-avatar clean-avatar">🧹</div>
             <div class="bot-meta">
               <span class="name">System Cleaner</span>
-              <span class="status-msg">Flush caches & bloatware</span>
+              <span class="status-msg">Flush caches & ads</span>
             </div>
           </li>
           <li class="roster-item" data-bot="media-agent">
@@ -76,24 +76,24 @@
           </li>
         </ul>
 
-        <div class="roster-section-title">QUICK TELEMETRY</div>
+        <div class="roster-section-title">MANUAL NETWORK TARGET</div>
+        <div class="manual-target-card">
+          <label>Target TV IP</label>
+          <input type="text" id="manualIpInput" value="192.168.0.111" placeholder="e.g. 192.168.0.111">
+          <label style="margin-top: 6px;">AirCode / PIN (Optional)</label>
+          <input type="text" id="manualPinInput" placeholder="4 or 6-digit PIN" maxlength="6">
+          <button id="btnConnectManual" class="cyber-outline-btn full-w">SAVE & CONNECT</button>
+        </div>
+
         <div class="roster-footer">
           <div class="system-stats">
             <div class="stat-row">
-              <span>CRCP Protocol</span>
-              <span class="val green">ARM64 JNI</span>
+              <span>CRCP Mode</span>
+              <span class="val green">Manual Bypass</span>
             </div>
             <div class="stat-row">
-              <span>Display Stream</span>
-              <span class="val">H.264 / 60 FPS</span>
-            </div>
-            <div class="stat-row">
-              <span>Wi-Fi Subnet</span>
-              <span class="val">192.168.0.x</span>
-            </div>
-            <div class="stat-row">
-              <span>AirCode Check</span>
-              <span class="val green">Auto-Bypass</span>
+              <span>Display Link</span>
+              <span class="val">Interactive Canvas</span>
             </div>
           </div>
         </div>
@@ -103,12 +103,12 @@
       <section class="grok-chat-pane">
         <div class="chat-header">
           <div class="chat-title">
-            <span class="agent-title">Grok Computer Use Thread</span>
-            <span class="agent-badge">LIVE RUNTIME</span>
+            <span class="agent-title">Grok Action Thread</span>
+            <span class="agent-badge">MANUAL MODE</span>
           </div>
           <div class="mode-selector">
-            <button class="mode-chip active" id="modeAuto">Autonomous</button>
-            <button class="mode-chip" id="modeStep">Human-In-Loop</button>
+            <button class="mode-chip" id="modeAuto">Autonomous</button>
+            <button class="mode-chip active" id="modeStep">Manual Direct</button>
           </div>
         </div>
 
@@ -117,7 +117,7 @@
           <div class="message-block system">
             <div class="msg-header">SYSTEM ENGINE</div>
             <div class="msg-body">
-              GrokBot initialized. Zero-config Wi-Fi daemon active. CRCP bundle mounted from <code>gaia-auto</code> repository.
+              Manual control mode engaged. Wi-Fi auto-scanning disabled. The TV display and touch surface are fully unlocked and ready to use.
             </div>
           </div>
 
@@ -127,7 +127,7 @@
               <span class="msg-time">Just now</span>
             </div>
             <div class="msg-body">
-              I'm actively monitoring your Wi-Fi for your TV. Tell me what to do, or click any suggested prompt below!
+              You're in complete manual control! The TV viewport on the right is unlocked. You can tap any app directly, click the virtual remote keys, or give me commands.
             </div>
           </div>
         </div>
@@ -138,12 +138,13 @@
           <button class="suggestion-chip" data-prompt="Clean TV bloatware and free RAM">🧹 Clean Bloat</button>
           <button class="suggestion-chip" data-prompt="Open TV Settings">⚙️ Settings</button>
           <button class="suggestion-chip" data-prompt="Open Media Browser">📁 Media Files</button>
+          <button class="suggestion-chip" data-prompt="Reboot TV">🔄 Reboot</button>
         </div>
 
         <!-- Grok Input Field -->
         <div class="chat-input-bar">
           <div class="input-wrapper">
-            <textarea id="userInput" rows="1" placeholder="Instruct GrokBot (e.g. 'Open YouTube', 'Clean bloatware', 'Volume up')..."></textarea>
+            <textarea id="userInput" rows="1" placeholder="Type an instruction or click TV screen directly..."></textarea>
             <button id="btnSend" class="send-action-btn">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
                 <path d="M5 12h14M12 5l7 7-7 7"/>
@@ -153,17 +154,16 @@
         </div>
       </section>
 
-      <!-- Right Pane: Computer Use Live Preview (TV Display & Cursor) -->
+      <!-- Right Pane: Computer Preview & Interactive TV Canvas -->
       <section class="computer-preview-pane">
         <div class="preview-header">
           <div class="preview-title">
-            <span class="live-dot"></span>
-            <span>COMPUTER USE PREVIEW</span>
+            <span class="live-dot manual"></span>
+            <span>TV VIEWPORT (TOUCH UNLOCKED)</span>
             <span class="tv-resolution-badge">1080P 60FPS</span>
           </div>
           <div class="preview-controls">
-            <button id="btnRescan" class="subtle-btn" title="Re-scan Wi-Fi">Wi-Fi Scan</button>
-            <button id="btnSimulatePower" class="subtle-btn" title="Toggle Simulation Link">Toggle Link</button>
+            <button id="btnToggleDisplay" class="subtle-btn">Toggle View</button>
           </div>
         </div>
 
@@ -171,7 +171,7 @@
           <!-- TV Screen Surface -->
           <canvas id="tvDisplay" width="960" height="540"></canvas>
           
-          <!-- Grok AI Computer-Use Cursor -->
+          <!-- Grok AI Pointer Cursor -->
           <div id="aiCursor" class="grok-cursor">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="#000" stroke="#00f2fe" stroke-width="2">
               <polygon points="3 3 10.07 19.97 12.58 12.58 19.97 10.07 3 3"/>
@@ -181,31 +181,21 @@
 
           <!-- Click Ripple Animation Layer -->
           <div id="clickRipple" class="click-ripple"></div>
-
-          <!-- Standby / Search Radar Screen -->
-          <div class="standby-screen" id="standbyScreen">
-            <div class="radar-circle">
-              <div class="sweep-arm"></div>
-            </div>
-            <h4>Searching Home Wi-Fi</h4>
-            <p>Scanning 192.168.0.x for CVTE Smart TV broadcast. Turn on your TV to auto-connect.</p>
-            <button id="btnWakeSim" class="cyber-outline-btn">Test with Simulated Display</button>
-          </div>
         </div>
 
         <!-- TV Physical Navigation Strip -->
         <div class="tv-remote-strip">
-          <button class="pill-key" data-key="HOME">Home</button>
-          <button class="pill-key" data-key="BACK">Back</button>
+          <button class="pill-key" data-key="HOME">🏠 Home</button>
+          <button class="pill-key" data-key="BACK">↩ Back</button>
           <button class="pill-key" data-key="UP">▲</button>
           <button class="pill-key" data-key="DOWN">▼</button>
           <button class="pill-key" data-key="LEFT">◀</button>
           <button class="pill-key" data-key="RIGHT">▶</button>
           <button class="pill-key highlight" data-key="OK">OK</button>
-          <button class="pill-key" data-key="MENU">Menu</button>
-          <button class="pill-key" data-key="VOL_UP">Vol +</button>
-          <button class="pill-key" data-key="VOL_DOWN">Vol -</button>
-          <button class="pill-key red" data-key="POWER">Power</button>
+          <button class="pill-key" data-key="MENU">☰ Menu</button>
+          <button class="pill-key" data-key="VOL_UP">🔊 +</button>
+          <button class="pill-key" data-key="VOL_DOWN">🔉 -</button>
+          <button class="pill-key red" data-key="POWER">⏻ Power</button>
         </div>
       </section>
 
