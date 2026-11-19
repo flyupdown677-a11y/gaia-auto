@@ -3,7 +3,7 @@
 
 const appState = {
   connected: true, // Always ready in manual mode
-  targetIp: '192.168.0.111',
+  targetIp: '192.168.0.113',
   airCode: '',
   activeBot: 'tv-agent',
   humanTakeover: true, // Manual direct touch active
